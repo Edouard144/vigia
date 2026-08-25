@@ -1,3 +1,6 @@
 from django.contrib import admin
+from .models import Event, AgentTask, ApprovalRequest
 
-# Register your models here.
+admin.site.register(Event)
+admin.site.register(AgentTask)
+admin.site.register(ApprovalRequest)
