@@ -1,5 +1,5 @@
 from celery import shared_task
-from .models import Event, AgentTask
+from .models import Event, AgentTask, ApprovalRequest
 
 @shared_task
 def process_event(event_id):
@@ -11,6 +11,15 @@ def process_event(event_id):
         status="running",
         input_data=event.payload
     )
+
+    if event.payload.get("needs_approval"):
+        task.status = "waiting_approval"
+        task.save()
+        ApprovalRequest.objects.create(
+            task=task,
+            message=f"Approve processing of event from {event.source}?"
+        )
+        return {"status": "waiting_approval", "task_id": str(task.id)}
 
     result = {"summary": f"Processed event from {event.source}"}
 
