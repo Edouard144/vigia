@@ -1,5 +1,6 @@
 from celery import shared_task
 from .models import Event, AgentTask, ApprovalRequest
+from .graph import agent_graph
 
 @shared_task
 def process_event(event_id):
@@ -12,27 +13,29 @@ def process_event(event_id):
         input_data=event.payload
     )
 
-    needs_approval = event.payload.get("needs_approval", False)
+    result_state = agent_graph.invoke({
+        "event_source": event.source,
+        "event_payload": event.payload,
+        "summary": "",
+        "needs_approval": False,
+        "action_plan": ""
+    })
 
-    if needs_approval:
+    if result_state["needs_approval"]:
         task.status = "waiting_approval"
+        task.output_data = result_state
         task.save()
 
         ApprovalRequest.objects.create(
             task=task,
-            message=f"Approve action for event: {event.source} - {event.payload.get('title', 'Untitled')}"
+            message=f"{result_state['summary']} — Proposed action: {result_state['action_plan']}"
         )
-
-        event.processed = True
-        event.save()
-        return {"status": "waiting_approval"}
-
-    result = {"summary": f"Processed event from {event.source}"}
-    task.status = "completed"
-    task.output_data = result
-    task.save()
+    else:
+        task.status = "completed"
+        task.output_data = result_state
+        task.save()
 
     event.processed = True
     event.save()
 
-    return result
+    return result_state
