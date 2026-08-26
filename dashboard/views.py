@@ -7,28 +7,37 @@ from agents.tasks import process_event
 from .serializers import EventSerializer, AgentTaskSerializer, ApprovalRequestSerializer
 
 class EventViewSet(viewsets.ModelViewSet):
-    queryset = Event.objects.all()
     serializer_class = EventSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Event.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
         event = serializer.save(user=self.request.user)
         process_event.delay(str(event.id))
 
 class AgentTaskViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = AgentTask.objects.all()
     serializer_class = AgentTaskSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    def get_queryset(self):
+        return AgentTask.objects.filter(event__user=self.request.user)
+
 class ApprovalRequestViewSet(viewsets.ModelViewSet):
-    queryset = ApprovalRequest.objects.all()
     serializer_class = ApprovalRequestSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return ApprovalRequest.objects.filter(task__event__user=self.request.user)
 
     @action(detail=True, methods=['post'])
     def respond(self, request, pk=None):
         approval = self.get_object()
         approved = request.data.get('approved')
+
+        if approved is None:
+            return Response({"error": "approved field is required"}, status=400)
 
         approval.approved = approved
         approval.responded_at = timezone.now()
@@ -36,7 +45,7 @@ class ApprovalRequestViewSet(viewsets.ModelViewSet):
 
         task = approval.task
         task.status = 'completed' if approved else 'failed'
-        task.output_data = {"approved": approved}
+        task.output_data = {**task.output_data, "approved": approved}
         task.save()
 
         return Response({"status": "approved" if approved else "rejected"})
