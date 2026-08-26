@@ -1,11 +1,11 @@
 from langgraph.graph import StateGraph, END
-from langchain_anthropic import ChatAnthropic
+from langchain_groq import ChatGroq
 from decouple import config
 from typing import TypedDict
 
-llm = ChatAnthropic(
-    model="claude-sonnet-4-5-20250929",
-    api_key=config('ANTHROPIC_API_KEY')
+llm = ChatGroq(
+    model="llama-3.1-8b-instant",
+    api_key=config('GROQ_API_KEY')
 )
 
 class AgentState(TypedDict):
