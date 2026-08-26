@@ -1,4 +1,7 @@
 from rest_framework import viewsets, permissions
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from django.utils import timezone
 from agents.models import Event, AgentTask, ApprovalRequest
 from agents.tasks import process_event
 from .serializers import EventSerializer, AgentTaskSerializer, ApprovalRequestSerializer
@@ -21,3 +24,19 @@ class ApprovalRequestViewSet(viewsets.ModelViewSet):
     queryset = ApprovalRequest.objects.all()
     serializer_class = ApprovalRequestSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    @action(detail=True, methods=['post'])
+    def respond(self, request, pk=None):
+        approval = self.get_object()
+        approved = request.data.get('approved')
+
+        approval.approved = approved
+        approval.responded_at = timezone.now()
+        approval.save()
+
+        task = approval.task
+        task.status = 'completed' if approved else 'failed'
+        task.output_data = {"approved": approved}
+        task.save()
+
+        return Response({"status": "approved" if approved else "rejected"})
