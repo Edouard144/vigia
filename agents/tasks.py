@@ -12,17 +12,22 @@ def process_event(event_id):
         input_data=event.payload
     )
 
-    if event.payload.get("needs_approval"):
+    needs_approval = event.payload.get("needs_approval", False)
+
+    if needs_approval:
         task.status = "waiting_approval"
         task.save()
+
         ApprovalRequest.objects.create(
             task=task,
-            message=f"Approve processing of event from {event.source}?"
+            message=f"Approve action for event: {event.source} - {event.payload.get('title', 'Untitled')}"
         )
-        return {"status": "waiting_approval", "task_id": str(task.id)}
+
+        event.processed = True
+        event.save()
+        return {"status": "waiting_approval"}
 
     result = {"summary": f"Processed event from {event.source}"}
-
     task.status = "completed"
     task.output_data = result
     task.save()
