@@ -17,3 +17,11 @@ class Integration(BaseModel):
 
     class Meta:
         unique_together = ('user', 'provider')
+
+class OAuthConnection(BaseModel):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    provider = models.CharField(max_length=50)
+    access_token = models.CharField(max_length=255)
+    refresh_token = models.CharField(max_length=255, blank=True)
+    expires_at = models.DateTimeField(null=True, blank=True)
+    is_active = models.BooleanField(default=True)
