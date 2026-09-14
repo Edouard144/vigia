@@ -1,6 +1,6 @@
 import os
 
-ENVIRONMENT = os.environ.get('ENVIRONMENT', 'development')
+ENVIRONMENT = os.environ.get('ENVIRONMENT', 'production' if 'RENDER' in os.environ else 'development')
 
 if ENVIRONMENT == 'production':
     from .production import *
