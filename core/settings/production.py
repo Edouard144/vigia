@@ -27,3 +27,14 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_FRAME_OPTIONS = 'DENY'
 X_FRAME_OPTIONS = 'DENY'
+
+# CORS — allow the frontend origin
+FRONTEND_URL = config('FRONTEND_URL', default='')
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://localhost:8080",
+    "http://localhost:8081",
+    "http://localhost:3000",
+]
+if FRONTEND_URL:
+    CORS_ALLOWED_ORIGINS.append(FRONTEND_URL)
