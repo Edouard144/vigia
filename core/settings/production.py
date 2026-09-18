@@ -18,16 +18,6 @@ SECURE_SSL_REDIRECT = True
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 
-# Database from DATABASE_URL (Neon)
-import dj_database_url
-DATABASES = {
-    'default': dj_database_url.config(
-        env='DATABASE_URL',
-        conn_max_age=600,
-        ssl_require=True,
-    )
-}
-
 # Static files (whitenoise)
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATIC_URL = '/static/'
