@@ -25,7 +25,30 @@ class AgentTask(BaseModel):
     error = models.TextField(blank=True, null=True)
 
 class ApprovalRequest(BaseModel):
+    CHANNEL_CHOICES = [
+        ('gmail', 'Gmail'),
+        ('calendar', 'Calendar'),
+        ('slack', 'Slack'),
+        ('banking', 'Banking'),
+        ('contacts', 'Contacts'),
+    ]
+    RISK_CHOICES = [
+        ('low', 'Low'),
+        ('medium', 'Medium'),
+        ('high', 'High'),
+    ]
+
     task = models.ForeignKey(AgentTask, on_delete=models.CASCADE, related_name='approvals')
-    message = models.TextField()
+    title = models.CharField(max_length=255, blank=True, default='')
+    intent = models.TextField(blank=True, default='')
+    recipient = models.CharField(max_length=255, blank=True, default='')
+    channel = models.CharField(max_length=20, choices=CHANNEL_CHOICES, blank=True, default='')
+    risk = models.CharField(max_length=10, choices=RISK_CHOICES, default='medium')
+    confidence = models.FloatField(default=0.0)
+    expires_in_minutes = models.PositiveIntegerField(null=True, blank=True)
+    reasoning = models.JSONField(default=list, blank=True)
+    draft = models.TextField(blank=True, default='')
+    side_effects = models.JSONField(default=list, blank=True)
+    message = models.TextField(blank=True, default='')
     approved = models.BooleanField(null=True)  # null = pending
     responded_at = models.DateTimeField(null=True, blank=True)

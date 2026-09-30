@@ -23,7 +23,17 @@ def process_event(self, event_id):
                 "event_payload": event.payload,
                 "summary": "",
                 "needs_approval": False,
-                "action_plan": ""
+                "action_plan": "",
+                "title": "",
+                "intent": "",
+                "recipient": "",
+                "channel": "",
+                "risk": "medium",
+                "confidence": 0.0,
+                "expires_in_minutes": None,
+                "reasoning": [],
+                "draft": "",
+                "side_effects": []
             })
         except Exception as ai_error:
             logger.error(f"AI agent failed for event {event_id}: {ai_error}")
@@ -39,6 +49,16 @@ def process_event(self, event_id):
 
             ApprovalRequest.objects.create(
                 task=task,
+                title=result_state.get("title") or result_state["summary"],
+                intent=result_state.get("intent", ""),
+                recipient=result_state.get("recipient", ""),
+                channel=result_state.get("channel", ""),
+                risk=result_state.get("risk", "medium"),
+                confidence=result_state.get("confidence", 0.0),
+                expires_in_minutes=result_state.get("expires_in_minutes"),
+                reasoning=result_state.get("reasoning", []),
+                draft=result_state.get("draft", ""),
+                side_effects=result_state.get("side_effects", []),
                 message=f"{result_state['summary']} — Proposed action: {result_state['action_plan']}"
             )
         else:
