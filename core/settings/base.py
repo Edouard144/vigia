@@ -169,7 +169,31 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:8081",
     "http://localhost:3000",
 ]
+for _origin in config('CORS_ALLOWED_ORIGINS', default='', cast=lambda v: v.split(',')):
+    _origin = _origin.strip().rstrip('/')
+    if _origin and _origin not in CORS_ALLOWED_ORIGINS:
+        CORS_ALLOWED_ORIGINS.append(_origin)
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "accept-encoding",
+    "authorization",
+    "content-type",
+    "dnt",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+]
+CORS_ALLOW_METHODS = [
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
+]
+CORS_URLS_REGEX = r"^/api/.*$"
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
